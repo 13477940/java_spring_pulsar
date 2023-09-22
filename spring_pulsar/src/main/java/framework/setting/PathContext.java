@@ -4,6 +4,7 @@ import framework.file.FileFinder;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Locale;
 
 /**
  * 此為新版本規則 #20220902 -> 以 "WebAppFiles" 作為預設資料夾名稱
@@ -13,7 +14,7 @@ import java.nio.file.Path;
  */
 public class PathContext {
 
-    // private final String host_os = System.getProperty("os.name");
+    private final String host_os_name = System.getProperty("os.name");
     private String file_separator = System.getProperty("file.separator");
 
     private String webapp_name = null; // this webapp name
@@ -117,7 +118,15 @@ public class PathContext {
         }
         if(null == webapp_file_folder || !webapp_file_folder.exists() || !webapp_file_folder.isDirectory()) {
             // step 2 - 從當前 jar 檔路徑搜尋
-            Path targetFilePath = Path.of(this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath());
+            String str_jar_path = this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+            {
+                // 如果是 windows os 環境
+                if(host_os_name.toLowerCase(Locale.ENGLISH).contains("windows") && file_separator.contains("\\")) {
+                    str_jar_path = str_jar_path.replaceFirst("/", "");
+                    str_jar_path = str_jar_path.replaceAll("/", "\\\\");
+                }
+            }
+            Path targetFilePath = Path.of(str_jar_path);
             FileFinder finder = new FileFinder.Builder().setBaseFile(targetFilePath.toFile()).build();
             webapp_file_folder = finder.find(this.base_webapp_file_folder_name);
         }

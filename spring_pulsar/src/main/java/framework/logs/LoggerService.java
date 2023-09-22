@@ -56,16 +56,16 @@ public class LoggerService {
         String now_date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         // check log file path dir exist
         {
-            if( !( new File( var_holder.file_path ).exists() ) ) {
-                new File(var_holder.file_path).mkdirs();
+            if( !( new File( Variable_Holder.file_path ).exists() ) ) {
+                new File(Variable_Holder.file_path).mkdirs();
             }
         }
         // 寫入 log 資料至檔案中
         String file_name = "log_" + now_date;
-        if(null != var_holder.app_name && !var_holder.app_name.isEmpty()) {
-            file_name = var_holder.app_name + "_log_" + now_date;
+        if(null != Variable_Holder.app_name && !Variable_Holder.app_name.isEmpty()) {
+            file_name = Variable_Holder.app_name + "_log_" + now_date;
         }
-        File logFile = new File(var_holder.file_path + var_holder.dir_slash + file_name);
+        File logFile = new File(Variable_Holder.file_path + Variable_Holder.dir_slash + file_name);
         {
             try {
                 if(!logFile.exists()) logFile.createNewFile();
@@ -77,7 +77,7 @@ public class LoggerService {
         if(logFile.exists() && logFile.isFile()) {
             try {
                 JsonObject obj = createLogObj(level, msg);
-                if( var_holder.console_output ) System.out.println(new Gson().toJson(obj));
+                if( Variable_Holder.console_output ) System.out.println(new Gson().toJson(obj));
                 // true = 尾端 append；false = 不進行 append
                 fw = new FileWriter(logFile, true);
                 String sys_new_line = System.lineSeparator();
@@ -107,30 +107,30 @@ public class LoggerService {
      * 初始化 log file 的資料夾路徑，未輸入則採用預設值
      */
     public static void init_logger(String file_path) {
-        var_holder.file_path = file_path;
+        Variable_Holder.file_path = file_path;
     }
 
     /**
      * 設定辨識標籤
      */
     public static void set_app_name(String app_name) {
-        var_holder.app_name = app_name;
+        Variable_Holder.app_name = app_name;
     }
 
     /**
      * 是否開啟預設的 console output
      */
     public static void set_console_output_status(boolean output_status) {
-        var_holder.console_output = output_status;
+        Variable_Holder.console_output = output_status;
     }
 
     // 建立記錄訊息物件
     private static JsonObject createLogObj(String level, String msg) {
         JsonObject obj = new JsonObject();
-        obj.addProperty("app_name", var_holder.app_name);
-        obj.addProperty("user_ip", var_holder.user_ip);
-        obj.addProperty("user_name", var_holder.user_name);
-        obj.addProperty("type", var_holder.type);
+        obj.addProperty("app_name", Variable_Holder.app_name);
+        obj.addProperty("user_ip", Variable_Holder.user_ip);
+        obj.addProperty("user_name", Variable_Holder.user_name);
+        obj.addProperty("type", Variable_Holder.type);
         obj.addProperty("level", level);
         LocalDateTime now = LocalDateTime.now();
         obj.addProperty("date", now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
@@ -142,7 +142,7 @@ public class LoggerService {
     /**
      * 私有變數儲存
      */
-    private static class var_holder {
+    private static class Variable_Holder {
 
         private static boolean console_output = true; // default
         private static String file_path = "";

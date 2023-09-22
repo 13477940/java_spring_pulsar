@@ -29,6 +29,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 
 /**
  * [required JDK 11+]
@@ -109,7 +111,7 @@ public class JdkHttpClient {
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder();
         {
             // 設定 request header
-            if (null != headers && headers.size() > 0) {
+            if (null != headers && !headers.isEmpty()) {
                 for (Map.Entry<String, String> header : headers.entrySet()) {
                     requestBuilder.setHeader(header.getKey(), header.getValue());
                 }
@@ -118,7 +120,7 @@ public class JdkHttpClient {
             LinkedHashMap<String, String> _params;
             {
                 _params = parse_url_parameter(this.url);
-                if(null != this.parameters && this.parameters.size() > 0) {
+                if(null != this.parameters && !this.parameters.isEmpty()) {
                     // 若有重複的 key 以 params map 值為主
                     _params.putAll(this.parameters);
                 }
@@ -127,7 +129,7 @@ public class JdkHttpClient {
             StringBuilder sbd = new StringBuilder();
             {
                 sbd.append(parse_url_domain(this.url));
-                if (null != _params && _params.size() > 0) {
+                if (null != _params && !_params.isEmpty()) {
                     boolean isFirst = true;
                     for (Map.Entry<String, String> params : _params.entrySet()) {
                         if (isFirst) {
@@ -159,7 +161,12 @@ public class JdkHttpClient {
         HttpRequest request = requestBuilder.build();
         HttpClient client = new WeakReference<>( clientBuilder.build() ).get();
         assert null != client;
-        asyncRequest(client, request, handler);
+        Future<?> future = asyncRequest(client, request, handler);
+        try {
+            future.get();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -169,7 +176,7 @@ public class JdkHttpClient {
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder();
         {
             // request header
-            if (null != headers && headers.size() > 0) {
+            if (null != headers && !headers.isEmpty()) {
                 for (Map.Entry<String, String> header : headers.entrySet()) {
                     requestBuilder.setHeader(header.getKey(), header.getValue());
                 }
@@ -182,12 +189,12 @@ public class JdkHttpClient {
             LinkedHashMap<String, String> _params;
             {
                 _params = parse_url_parameter(this.url);
-                if(null != this.parameters && this.parameters.size() > 0) {
+                if(null != this.parameters && !this.parameters.isEmpty()) {
                     // 若有重複的 key 以 params map 值為主
                     _params.putAll(this.parameters);
                 }
             }
-            if (null != _params && _params.size() > 0) {
+            if (null != _params && !_params.isEmpty()) {
                 StringBuilder sbd = new StringBuilder();
                 boolean isFirst = true;
                 for (Map.Entry<String, String> params : _params.entrySet()) {
@@ -218,7 +225,13 @@ public class JdkHttpClient {
         HttpRequest request = requestBuilder.build();
         HttpClient client = new WeakReference<>( clientBuilder.build() ).get();
         assert null != client;
-        asyncRequest(client, request, handler);
+        // asyncRequest(client, request, handler);
+        Future<?> future = asyncRequest(client, request, handler);
+        try {
+            future.get();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -228,7 +241,7 @@ public class JdkHttpClient {
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder();
         {
             // request header
-            if (null != headers && headers.size() > 0) {
+            if (null != headers && !headers.isEmpty()) {
                 for (Map.Entry<String, String> header : headers.entrySet()) {
                     requestBuilder.setHeader(header.getKey(), header.getValue());
                 }
@@ -259,7 +272,13 @@ public class JdkHttpClient {
         HttpRequest request = requestBuilder.build();
         HttpClient client = new WeakReference<>( clientBuilder.build() ).get();
         assert null != client;
-        asyncRequest(client, request, handler);
+        // asyncRequest(client, request, handler);
+        Future<?> future = asyncRequest(client, request, handler);
+        try {
+            future.get();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -272,22 +291,22 @@ public class JdkHttpClient {
         LinkedHashMap<String, String> _params;
         {
             _params = parse_url_parameter(this.url);
-            if(null != this.parameters && this.parameters.size() > 0) {
+            if(null != this.parameters && !this.parameters.isEmpty()) {
                 // 若有重複的 key 以 params map 值為主
                 _params.putAll(this.parameters);
             }
         }
-        if(null != _params && _params.size() > 0) {
+        if(null != _params && !_params.isEmpty()) {
             bMap.putAll(_params);
         }
         // 設定 Files
-        if(null != files && files.size() > 0) {
+        if(null != files && !files.isEmpty()) {
             bMap.putAll(files);
         }
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder();
         {
             // request header
-            if (null != headers && headers.size() > 0) {
+            if (null != headers && !headers.isEmpty()) {
                 for (Map.Entry<String, String> header : headers.entrySet()) {
                     requestBuilder.setHeader(header.getKey(), header.getValue());
                 }
@@ -310,13 +329,19 @@ public class JdkHttpClient {
         HttpRequest request = requestBuilder.build();
         HttpClient client = new WeakReference<>( clientBuilder.build() ).get();
         assert client != null;
-        asyncRequest(client, request, handler);
+        // asyncRequest(client, request, handler);
+        Future<?> future = asyncRequest(client, request, handler);
+        try {
+            future.get();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
      * 藉由非同步方式處理 Response
      */
-    private void asyncRequest(HttpClient client, HttpRequest request, Handler handler) {
+    private CompletableFuture<HttpResponse<InputStream>> asyncRequest(HttpClient client, HttpRequest request, Handler handler) {
         Handler tmp_handler;
         {
             LinkedHashMap<String, String> resp_header = new LinkedHashMap<>();
@@ -338,7 +363,7 @@ public class JdkHttpClient {
                     if("body".equals(status)) {
                         InputStream resp_body = (InputStream) m.getData().get("input_stream");
                         String contentType = resp_header.get("content_type");
-                        if(null == contentType || contentType.length() == 0) {
+                        if(null == contentType || contentType.isEmpty()) {
                             processTextResponse(resp_header, resp_body, handler);
                         } else {
                             if(contentType.contains("text/") || contentType.contains("application/json") || contentType.contains("application/x-msdownload")) {
@@ -359,7 +384,7 @@ public class JdkHttpClient {
             };
         }
         {
-            client.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
+            return client.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
                 .whenCompleteAsync((resp_input_stream, throw_opt) -> {
                     if(null != throw_opt) {
                         throw_opt.printStackTrace();
@@ -548,7 +573,7 @@ public class JdkHttpClient {
      * <a href="https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding">...</a>
      */
     private LinkedHashMap<String, String> parse_url_parameter(String url) {
-        if(null == url || url.length() == 0) return null; // is error url
+        if(null == url || url.isEmpty()) return null; // is error url
         int start_index = url.indexOf("?");
         if( -1 == start_index ) return new LinkedHashMap<>(); // is empty map
         String param_str = url.substring(start_index + 1); // +1 skip '?'
@@ -696,7 +721,7 @@ public class JdkHttpClient {
                 if(null == value) value = "";
                 map.put(key, value);
             }
-            if(map.size() > 0) this.headers = map;
+            if(!map.isEmpty()) this.headers = map;
             return this;
         }
 
@@ -708,7 +733,7 @@ public class JdkHttpClient {
                 if(null == value) value = "";
                 map.put(key, value);
             }
-            if(map.size() > 0) this.headers = map;
+            if(!map.isEmpty()) this.headers = map;
             return this;
         }
 
@@ -720,7 +745,7 @@ public class JdkHttpClient {
                 if(null == value) value = "";
                 map.put(key, value);
             }
-            if(map.size() > 0) this.headers = map;
+            if(!map.isEmpty()) this.headers = map;
             return this;
         }
 
@@ -732,7 +757,7 @@ public class JdkHttpClient {
                 if(null == value) value = "";
                 map.put(key, value);
             }
-            if(map.size() > 0) this.parameters = map;
+            if(!map.isEmpty()) this.parameters = map;
             return this;
         }
 
@@ -744,7 +769,7 @@ public class JdkHttpClient {
                 if(null == value) value = "";
                 map.put(key, value);
             }
-            if(map.size() > 0) this.parameters = map;
+            if(!map.isEmpty()) this.parameters = map;
             return this;
         }
 
@@ -756,7 +781,7 @@ public class JdkHttpClient {
                 if(null == value) value = "";
                 map.put(key, value);
             }
-            if(map.size() > 0) this.parameters = map;
+            if(!map.isEmpty()) this.parameters = map;
             return this;
         }
 
@@ -767,7 +792,7 @@ public class JdkHttpClient {
                 File value = entry.getValue();
                 map.put(key, value);
             }
-            if(map.size() > 0) this.files = map;
+            if(!map.isEmpty()) this.files = map;
             return this;
         }
 
@@ -778,7 +803,7 @@ public class JdkHttpClient {
                 File value = entry.getValue();
                 map.put(key, value);
             }
-            if(map.size() > 0) this.files = map;
+            if(!map.isEmpty()) this.files = map;
             return this;
         }
 

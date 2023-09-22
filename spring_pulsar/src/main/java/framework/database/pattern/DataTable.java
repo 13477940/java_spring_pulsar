@@ -67,13 +67,6 @@ public class DataTable {
     }
 
     /**
-     * 原依照 fastjson 規則採用命名，將進行廢棄
-     */
-    @Deprecated public JsonArray toJSONArray() {
-        return toJsonArray();
-    }
-
-    /**
      * 取得所有列的數量
      */
     public int size() {

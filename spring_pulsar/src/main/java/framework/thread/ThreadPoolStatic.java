@@ -13,7 +13,8 @@ public class ThreadPoolStatic {
 
     public static ExecutorService getInstance() {
         if(null == StaticHolder.worker && !StaticHolder.isShutdown) {
-            StaticHolder.worker = Executors.newCachedThreadPool();
+            // StaticHolder.worker = Executors.newCachedThreadPool();
+            StaticHolder.worker = Executors.newVirtualThreadPerTaskExecutor();
         }
         if(null == StaticHolder.worker) {
             try {
@@ -29,7 +30,8 @@ public class ThreadPoolStatic {
     // execute with check rejected exception
     public static void execute(Runnable runnable) {
         if(null == StaticHolder.worker && !StaticHolder.isShutdown) {
-            StaticHolder.worker = Executors.newCachedThreadPool();
+            // StaticHolder.worker = Executors.newCachedThreadPool();
+            StaticHolder.worker = Executors.newVirtualThreadPerTaskExecutor();
         }
         if(null == StaticHolder.worker) {
             try {

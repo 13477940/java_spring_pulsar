@@ -94,13 +94,6 @@ public class DataRow {
     }
 
     /**
-     * 原依照 fastjson 規則採用命名，將廢棄
-     */
-    @Deprecated public JsonObject toJSONObject() {
-        return toJsonObject();
-    }
-
-    /**
      * Instance Map Entry Set
      */
     public Set<Map.Entry<String, String>> entrySet() {

@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -77,7 +78,7 @@ public class SimpleDataSource extends ConnectorConfig implements ConnectionPool 
     @Override
     public void shutdown() {
         {
-            if (null == pool || pool.size() == 0) return;
+            if (null == pool || pool.isEmpty()) return;
             for (HashMap<String, Object> connObj : pool) {
                 try {
                     Connection conn = (Connection) connObj.get("connection");
@@ -131,7 +132,7 @@ public class SimpleDataSource extends ConnectorConfig implements ConnectionPool 
     private void setupSimpleManager() {
         // if(null == worker) worker = ThreadPoolStatic.getInstance();
         // worker.execute(() -> {
-        ThreadPoolStatic.execute(() -> {
+        Future<?> future = ThreadPoolStatic.getInstance().submit(() -> {
             while(runTag) {
                 for (HashMap<String, Object> connObj : pool) {
                     // 檢查是否有逾時的 Connection 未被關閉
@@ -156,6 +157,11 @@ public class SimpleDataSource extends ConnectorConfig implements ConnectionPool 
                 }
             }
         });
+        try {
+            future.get();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**

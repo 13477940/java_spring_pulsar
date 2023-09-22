@@ -1,9 +1,11 @@
 package framework.controller;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import framework.random.RandomServiceStatic;
 import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.tika.Tika;
 import org.apache.tika.mime.MediaType;
@@ -16,11 +18,64 @@ import java.lang.ref.WeakReference;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * 適用於增強 Spring 的 RestController 功能
  */
 public abstract class BaseRestController {
+
+    /**
+     * 轉換 HttpServletRequest.getParameterMap() 為 HashMap<String, String> 形式
+     */
+    protected HashMap<String, String> get_request_params(HttpServletRequest request) {
+        HashMap<String, String> param_map = new HashMap<>();
+        GsonBuilder gson_builder = new GsonBuilder();
+        {
+            gson_builder.disableHtmlEscaping();
+            gson_builder.serializeNulls();
+        }
+        for(Map.Entry<String, String[]> entry: request.getParameterMap().entrySet()) {
+            String key = entry.getKey();
+            String value;
+            if(1 == entry.getValue().length) {
+                value = entry.getValue()[0];
+            } else {
+                JsonArray j_arr = new JsonArray();
+                for(String str: entry.getValue()) {
+                    j_arr.add(str);
+                }
+                value = gson_builder.create().toJson(j_arr);
+            }
+            param_map.put(key, value);
+        }
+        return param_map;
+    }
+
+    protected HashMap<String, String> get_request_headers(HttpServletRequest request) {
+        return get_request_headers(request, false);
+    }
+
+    /**
+     * 轉換 HttpServletRequest.getHeaderNames() 為 HashMap<String, String> 形式
+     */
+    protected HashMap<String, String> get_request_headers(HttpServletRequest request, boolean lowercase) {
+        HashMap<String, String> header_map = new HashMap<>();
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String name = headerNames.nextElement();
+            String value = request.getHeader(name);
+            if(lowercase) {
+                header_map.put(name.toLowerCase(Locale.ENGLISH), value.toLowerCase(Locale.ENGLISH));
+            } else {
+                header_map.put(name, value);
+            }
+        }
+        return header_map;
+    }
 
     /**
      * 將 UTF-8 字串轉換為瀏覽器可用的 url-encoding 檔案名稱
@@ -52,10 +107,10 @@ public abstract class BaseRestController {
     }
 
     protected void output_file_to_response(File file, boolean isAttachment, HttpServletResponse response) {
-        output_file_to_response(file, null, isAttachment, response);
+        output_file_to_response(file, null, null, isAttachment, response);
     }
 
-    protected void output_file_to_response(File file, MediaType mediaType, boolean isAttachment, HttpServletResponse response) {
+    protected void output_file_to_response(File file, String file_name, MediaType mediaType, boolean isAttachment, HttpServletResponse response) {
         String file_mime = "application/octet-stream"; // Any kind of binary data
         // use tika
         try {
@@ -79,6 +134,10 @@ public abstract class BaseRestController {
             StringBuilder sbd = new StringBuilder();
             {
                 String encode_file_name = url_encode_str(file.getName());
+                // 如果有自定義檔案名稱
+                if(null != file_name && !file_name.isEmpty()) {
+                    encode_file_name = url_encode_str(file_name);
+                }
                 if (isAttachment) {
                     sbd.append("attachment;filename=\"");
                 } else {

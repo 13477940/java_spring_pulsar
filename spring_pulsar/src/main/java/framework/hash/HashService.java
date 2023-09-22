@@ -54,8 +54,8 @@ public abstract class HashService {
     }
 
     /**
-     * https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/security/MessageDigest.html
-     * https://docs.oracle.com/en/java/javase/11/docs/specs/security/standard-names.html#messagedigest-algorithms
+     * <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/security/MessageDigest.html">...</a>
+     * <a href="https://docs.oracle.com/en/java/javase/11/docs/specs/security/standard-names.html#messagedigest-algorithms">...</a>
      */
     private String stringToHash(String hashType, String content) {
         String result = null;

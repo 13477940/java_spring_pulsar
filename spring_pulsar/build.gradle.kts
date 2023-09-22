@@ -3,10 +3,10 @@ plugins {
 }
 
 group = "dev.hackfun"
-version = "0.8.1_230914"
+version = "0.9.7_230922"
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_17
+	sourceCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
