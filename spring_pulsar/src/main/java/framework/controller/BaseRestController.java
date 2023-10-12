@@ -18,10 +18,7 @@ import java.lang.ref.WeakReference;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 適用於增強 Spring 的 RestController 功能
@@ -221,6 +218,30 @@ public abstract class BaseRestController {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 取得 Request 端 IP
+     * <a href="https://stackoverflow.com/questions/18570747/servlet-get-client-public-ip">...</a>
+     */
+    protected String get_remote_ip(HttpServletRequest request) {
+        ArrayList<String> names = Collections.list(request.getHeaderNames());
+        HashMap<String, String> headers = new HashMap<>();
+        for(String key : names) {
+            String value = request.getHeader(key);
+            headers.put(key.toLowerCase(Locale.ENGLISH), value);
+        }
+        String ip = headers.get("x-forwarded-for");
+        if(null == ip || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = headers.get("proxy-client-ip");
+        }
+        if(null == ip || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = headers.get("wl-proxy-client-ip");
+        }
+        if(null == ip || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        return ip;
     }
 
 }

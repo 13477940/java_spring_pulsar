@@ -11,14 +11,26 @@ import java.util.Optional;
 /**
  * FileFinder 使用 find 主要是快速搜尋某個資料夾或檔案，
  * 當使用 find_all 才會遍歷每個子資料夾內部
+ * -
+ * #231006 修正 in-jar 時的路徑處理、修正 windows 路徑處理
  */
 public class FileFinder {
 
+    private final String host_os_name = System.getProperty("os.name");
+    private String file_separator = System.getProperty("file.separator");
+
     private File base_file; // 搜尋起始點
 
-    private FileFinder(File base_file) {
-        this.base_file = base_file;
-        init_fn();
+    private FileFinder(File _base_file) {
+        // fix for like WINDOWS OS etc.
+        if("\\".equalsIgnoreCase(file_separator)) {
+            this.file_separator = "\\\\";
+        }
+        if(null != _base_file) {
+            base_file = _base_file;
+        } else {
+            init_fn();
+        }
     }
 
     /**
@@ -27,7 +39,7 @@ public class FileFinder {
     public File find(String file_name) {
         final String _file_name = file_name.toLowerCase(Locale.ENGLISH);
         boolean hit = false;
-        Path now_target_path = Paths.get(base_file.getPath());
+        Path now_target_path = base_file.toPath();
         File file = null;
         if( Files.isDirectory( now_target_path ) ) {
             try (DirectoryStream<Path> stream = Files.newDirectoryStream( now_target_path )) {
@@ -90,12 +102,35 @@ public class FileFinder {
     private void init_fn() {
         if(null == base_file) {
             try {
-                Path targetPath = Paths.get(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI());
-                base_file = targetPath.toFile();
+                base_file = get_tmp_file_instance();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    /**
+     * 如果是 in-jar 狀態會是：jar:file:/Users/user_name/Downloads/run.war!/...
+     * 所以要先去除 jar:file: 標誌才能正常給 Path 類存取路徑
+     */
+    private File get_tmp_file_instance() {
+        String tmp = String.valueOf(this.getClass().getProtectionDomain().getCodeSource().getLocation());
+        String str_path = tmp;
+        Path path;
+        // 檢查是否為 in-jar 檔路徑形式
+        if(tmp.contains("jar:file:")) {
+            str_path = tmp.replaceFirst("jar:file:", "");
+            // if windows os
+            if(host_os_name.toLowerCase(Locale.ENGLISH).contains("windows") && file_separator.contains("\\")) {
+                str_path = str_path.replaceFirst("/", "");
+                str_path = str_path.replaceAll("/", "\\\\");
+            }
+            // 要上跳四層的路徑才會是當下 jar 檔的系統資料夾層（不能在 jar 檔中）
+            path = Path.of(str_path).getParent().getParent().getParent().getParent();
+        } else {
+            path = Path.of(str_path);
+        }
+        return path.toFile();
     }
 
     public static class Builder {

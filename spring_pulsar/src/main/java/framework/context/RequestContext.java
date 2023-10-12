@@ -6,7 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * 預計替代 AsyncActionContext
+ * 用於替代舊版本的 AsyncActionContext 角色
  */
 public class RequestContext extends BaseRestController {
 
